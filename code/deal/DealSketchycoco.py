@@ -3,8 +3,6 @@
 # Created on 2021-07-18 16:16:11
 # @Author: zzm
 
-# conda activate sti-data
-
 from pycocotools.coco import COCO
 import numpy as np
 import cv2

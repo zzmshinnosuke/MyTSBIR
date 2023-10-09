@@ -38,7 +38,7 @@ def get_parser_train(prog='tsbir'):
     # model
     parser.add_argument('--batch_size',
                         type=int,
-                        default=1,
+                        default=16,
                         help='the batch size')
     
     parser.add_argument('--n_epoch',

@@ -10,7 +10,7 @@ import torch
 from sklearn.neighbors import NearestNeighbors
 
 from code.dataset import get_loader
-from code.clip import convert_weights, CLIP, tokenize
+from code.clip import convert_weights, CLIP
 from code.config import get_parser
 
 def test(test_dataloader, clipmodel):

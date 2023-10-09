@@ -5,9 +5,7 @@
 
 import os
 import json
-from collections import namedtuple
 from tqdm import tqdm
-import pickle
 
 import torch
 import torch.nn as nn

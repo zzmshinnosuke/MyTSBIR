@@ -65,9 +65,7 @@ class SFSDDataset(Dataset):
             print(item["filename"])
             caption = "test"
         image_path = os.path.join(self.images_path, item["reference"])
-        # sketch_path = os.path.join(self.sketch_path, imageId + ".jpeg")
         image = Image.open(image_path)
-        # sketch = Image.open(sketch_path)
         sketch = Image.fromarray(self.json2image(item))
         image_tran = self._transform(image)
         sketch_tran = self._transform(sketch)

@@ -1,27 +1,16 @@
-from PIL import Image
-import os
-import json
-import numpy as np
-
-import torch
 from torch.utils.data import Dataset
-from transformers import GPT2Tokenizer
+import json
+import os
+from PIL import Image
 
-from code.clip import _transform, tokenize
-
-MAX_LENGTH = 77
-input_resolution = 224
-
-class FScocoDataset(Dataset):
+class BaseFScocoDataset(Dataset):
     def __init__(self, config, split = "train"):
         self.config = config
         self.split = split
         self.root_path = config.dataset_root_path
         self.images_path = os.path.join(self.root_path, "images")
         self.sketch_path = os.path.join(self.root_path, "raster_sketches")
-        self._transform = _transform(input_resolution, is_train=False)
         self.files = list()
-        self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
         self.load_files_path()
 
     def load_files_path(self):
@@ -59,18 +48,5 @@ class FScocoDataset(Dataset):
         sketch_path = os.path.join(self.sketch_path, image_id + ".jpg")
         image = Image.open(image_path)
         sketch = Image.open(sketch_path)
-        image_tran = self._transform(image)
-        sketch_tran = self._transform(sketch)
         
-        cate =  torch.tensor(np.array(list(self.all_cats[image_id]["cats"]))) 
-        
-        tokenized = self.tokenizer.encode("<|endoftext|> " + caption + " <|endoftext|>")[:MAX_LENGTH]
-        masks = torch.zeros(MAX_LENGTH)
-        masks[torch.arange(len(tokenized))] = 1
-        tokens = torch.zeros(MAX_LENGTH).long()
-        tokens[torch.arange(len(tokenized))] = torch.LongTensor(tokenized)
-
-        txt = tokenize([str(caption)])[0]
-
-        return image_tran, sketch_tran, txt, cate , tokens, masks
-        
+        return sketch, [caption], image, image_id.replace('/','_')
