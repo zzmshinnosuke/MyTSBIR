@@ -46,5 +46,10 @@ def get_parser_test(prog='tsbir'):
                         default="./runs/latest_checkpoint.pth",
                         help='model postion')
     
+    parser.add_argument('--Top_K',
+                        type=int,
+                        default=1,
+                        help='recall top_k')
+    
     
     return parser

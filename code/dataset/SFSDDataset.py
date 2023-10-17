@@ -25,7 +25,8 @@ class SFSDDataset(Dataset):
         self.split = split
         self.root_path = config.dataset_root_path
         self.images_path = os.path.join(self.root_path, "images")
-        self.sketch_path = os.path.join(self.root_path, "sketchImg")
+        self.sketchImg_path = os.path.join(self.root_path, "sketchImgs")
+        self.sketch_path = os.path.join(self.root_path, "sketches")
         self._transform = _transform(input_resolution, is_train=False)
         self.files = list()
         self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
@@ -47,28 +48,31 @@ class SFSDDataset(Dataset):
             filename_path = os.path.join(self.root_path, filename_txt)
             assert os.path.exists(filename_path), 'not find {}'.format(filename_path)
             with open(filename_path, 'r') as f:
-                self.files=[os.path.join(self.root_path, 'sketch', line.strip()) for line in f.readlines()]
+                self.files=[line.strip() for line in f.readlines()]
         assert len(self.files)>0, 'no sketch json file find in {}'.format(self.root_path)
+
+        captionpath = os.path.join(self.root_path, self.split+'.json')
+        with open(captionpath, "r") as f:
+            try:
+                self.all_captions = json.load(f)
+            except json.decoder.JSONDecodeError:
+                print("don't have "+ captionpath)
         
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, index):
-        with open(self.files[index], 'r') as fp:
+        sketch_id = self.files[index]
+        with open(os.path.join(self.sketch_path, sketch_id+'.json'), 'r') as fp:
             item = json.load(fp)
-            item["filename"] = os.path.basename(self.files[index])
 
-        imageId = str(item['reference'].split('.')[0])
-        if 'captions' in item.keys():
-            caption = item['captions'][0]
-        else:
-            print(item["filename"])
-            caption = "test"
-        image_path = os.path.join(self.images_path, item["reference"])
+        caption = self.all_captions[sketch_id]['captions'][0]
+
+        image_path = os.path.join(self.images_path, sketch_id+'.jpg')
         image = Image.open(image_path)
-        sketch = Image.fromarray(self.json2image(item))
+        sketchImg = Image.fromarray(self.json2image(item))
         image_tran = self._transform(image)
-        sketch_tran = self._transform(sketch)
+        sketch_tran = self._transform(sketchImg)
         
         categories = dict.fromkeys(self.categories_info, 0)
         for obj in item['objects']:
@@ -83,7 +87,7 @@ class SFSDDataset(Dataset):
 
         txt = tokenize([str(caption)])[0]
 
-        return image_tran, sketch_tran, txt, cate , tokens, masks
+        return sketch_id, image_tran, sketch_tran, txt, cate , tokens, masks
     
     def json2image(self, info):
         """

@@ -29,7 +29,7 @@ def train(args, logger, train_dataloader, clipmodel, gptmodel, classmodel):
     for epoch in range(args.n_epoch):
         for batch in tqdm(train_dataloader):
             step += 1
-            image, sketch, txt, cate, tokens, masks = batch
+            sketch_id, image, sketch, txt, cate, tokens, masks = batch
             image, sketch, txt, cate, tokens, masks = image.cuda(), sketch.cuda(), txt.cuda(), cate.cuda(), tokens.cuda(), masks.cuda()
             
             image_feature, fused_feature = clipmodel(image, txt, sketch)
@@ -43,9 +43,9 @@ def train(args, logger, train_dataloader, clipmodel, gptmodel, classmodel):
             logits_per_image = logit_scale * image_feature @ fused_feature.t()
             logits_per_fuse = logits_per_image.t()
             if device == "cpu":
-                ground_truth = torch.arange(batch[0].shape[0]).long().to(device)
+                ground_truth = torch.arange(image.shape[0]).long().to(device)
             else:
-                ground_truth = torch.arange(batch[0].shape[0], dtype=torch.long, device=device)
+                ground_truth = torch.arange(image.shape[0], dtype=torch.long, device=device)
             Le_loss = (loss_img(logits_per_image, ground_truth) + loss_txt_sketch(logits_per_fuse, ground_truth)) / 2
 
             #Lc
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     logger.close()
 
 '''
-python train.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD --logger_comment tsbir_SFSD
+python train.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --logger_comment tsbir_SFSD_textonly
 python train.py --dataset FScocoDataset --dataset_root_path ~/datasets/fscoco --output_dim 80 --logger_comment tsbir_fscoco
 python train.py --dataset SketchycocoDataset --dataset_root_path ~/datasets/SketchyCOCO --output_dim 80 --logger_comment tsbir_sketchycoco
 '''
