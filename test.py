@@ -46,7 +46,7 @@ def test(args, test_dataloader, clipmodel):
         save_result(args, retrival_result)
 
 '''
-python test.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --resume ./runs/Oct10_22-27-04_dp3090tsbir_SFSD/latest_checkpoint.pth
+python test.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --resume ./runs/Oct19_15-04-56_dp3090tsbir_SFSD_sketch_text_new/latest_checkpoint.pth
 python test.py --dataset FScocoDataset --dataset_root_path ~/datasets/fscoco --resume ./runs/Sep19_17-33-48_cu02tsbir_fscoco/latest_checkpoint.pth
 python test.py --dataset SketchycocoDataset --dataset_root_path ~/datasets/SketchyCOCO --resume ./runs/Sep19_20-02-14_cu02tsbir_sketchycoco/latest_checkpoint.pth
 '''
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     model = CLIP(**model_info)
 
     checkpoint = torch.load(args.resume)
-    model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+    model.load_state_dict(checkpoint['state_dict'], strict=False)
     model.eval()
     clipmodel = model.to(device)
     convert_weights(clipmodel)

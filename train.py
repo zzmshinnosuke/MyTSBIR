@@ -80,14 +80,14 @@ def train(args, logger, train_dataloader, clipmodel, gptmodel, classmodel):
                 torch.save({
                     'epoch':epoch,
                     'opt':args,
-                    'model_state_dict':clipmodel.state_dict()},
+                    'state_dict':clipmodel.state_dict()},
                     logger.file_writer.get_logdir()+'/latest_checkpoint.pth'
                 )
             
     torch.save({
             'epoch':epoch,
             'opt':args,
-            'model_state_dict':clipmodel.state_dict()},
+            'state_dict':clipmodel.state_dict()},
             logger.file_writer.get_logdir()+'/latest_checkpoint.pth'
         )
 
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     logger.close()
 
 '''
-python train.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --logger_comment tsbir_SFSD_textonly
+python train.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --logger_comment tsbir_SFSD_sketch_text
 python train.py --dataset FScocoDataset --dataset_root_path ~/datasets/fscoco --output_dim 80 --logger_comment tsbir_fscoco
 python train.py --dataset SketchycocoDataset --dataset_root_path ~/datasets/SketchyCOCO --output_dim 80 --logger_comment tsbir_sketchycoco
 '''
