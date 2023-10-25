@@ -29,7 +29,7 @@ class SFSDDataset(Dataset):
         self.sketch_path = os.path.join(self.root_path, "sketches")
         self._transform = _transform(input_resolution, is_train=False)
         self.files = list()
-        self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+        self.tokenizer = GPT2Tokenizer.from_pretrained("./gpt2")
         self.load_files_path()
         self.load_categories()
 

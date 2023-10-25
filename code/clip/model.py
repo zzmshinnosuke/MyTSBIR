@@ -433,7 +433,7 @@ class CLIP(nn.Module):
             fused_features = (text_features + sketch_features)/2
         else:
             raise Exception(f'Mode {self.feature_fusion} not yet supported')
-        return sketch_features
+        return fused_features
     
 def convert_weights(model: nn.Module):
     """Convert applicable model parameters to fp16"""

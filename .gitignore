@@ -2,6 +2,7 @@
 runs/
 model_pt/
 result/
+gpt2/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

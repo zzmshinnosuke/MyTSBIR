@@ -15,7 +15,7 @@ from code.clip import convert_weights, CLIP
 from code.config import get_parser
 
 def save_result(args, retrival_result):
-    with open("/home/zzm/projects/MyTSBIR/runs/retrival_result.json", "w") as f:
+    with open("/data/zzm/projects/MyTSBIR/runs/retrival_result.json", "w") as f:
         json.dump(retrival_result, f)
 
 def test(args, test_dataloader, clipmodel):
@@ -46,7 +46,7 @@ def test(args, test_dataloader, clipmodel):
         save_result(args, retrival_result)
 
 '''
-python test.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --resume ./runs/Oct19_15-04-56_dp3090tsbir_SFSD_sketch_text_new/latest_checkpoint.pth
+python test.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --resume ./runs/Oct19_23-33-48_cu02tsbir_SFSD_textonly/latest_checkpoint.pth
 python test.py --dataset FScocoDataset --dataset_root_path ~/datasets/fscoco --resume ./runs/Sep19_17-33-48_cu02tsbir_fscoco/latest_checkpoint.pth
 python test.py --dataset SketchycocoDataset --dataset_root_path ~/datasets/SketchyCOCO --resume ./runs/Sep19_20-02-14_cu02tsbir_sketchycoco/latest_checkpoint.pth
 '''

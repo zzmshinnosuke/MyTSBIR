@@ -8,7 +8,7 @@ from typing import Union, List
 
 import torch
 from PIL import Image
-from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, RandomResizedCrop, RandomAffine
+from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, RandomResizedCrop, RandomAffine, InterpolationMode
 from tqdm import tqdm
 
 from .model import build_model
@@ -80,7 +80,7 @@ def _transform(n_px: int, is_train: bool, affine: bool = False):
             ])
     else:
         return Compose([
-            Resize(n_px, interpolation=Image.BICUBIC),
+            Resize(n_px, interpolation=InterpolationMode.BICUBIC),
             CenterCrop(n_px),
             _convert_to_rgb,
             ToTensor(),
