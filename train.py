@@ -115,7 +115,7 @@ if __name__ == '__main__':
     sd = checkpoints["state_dict"]
     if next(iter(sd.items()))[0].startswith('module'):
         sd = {k[len('module.'):]: v for k, v in sd.items()}
-    model.load_state_dict(sd, strict=False)
+    # model.load_state_dict(sd, strict=False)
     model.train()
     clipmodel = model.to(device)
 
