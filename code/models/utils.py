@@ -11,7 +11,6 @@ from PIL import Image
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, RandomResizedCrop, RandomAffine, InterpolationMode
 from tqdm import tqdm
 
-from .model import build_model
 from .tokenizer import SimpleTokenizer as _Tokenizer
 
 __all__ = ["available_models", "load", "tokenize"]
@@ -87,121 +86,9 @@ def _transform(n_px: int, is_train: bool, affine: bool = False):
             normalize,
         ])
 
-
-
 def available_models() -> List[str]:
     """Returns the names of available CLIP models"""
     return list(_MODELS.keys())
-
-
-def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_available() else "cpu", jit=True, is_train=False, pretrained=True, weight_sharing=False, feature_fusion='avg', affine_transformation=False, num_class=None):
-    """Load a CLIP model
-    Parameters
-    ----------
-    name : str
-        A model name listed by `clip.available_models()`, or the path to a model checkpoint containing the state_dict
-    device : Union[str, torch.device]
-        The device to put the loaded model
-    jit : bool
-        Whether to load the optimized JIT model (default) or more hackable non-JIT model.
-    Returns
-    -------
-    model : torch.nn.Module
-        The CLIP model
-    preprocess : Callable[[PIL.Image], torch.Tensor]
-        A torchvision transform that converts a PIL image into a tensor that the returned model can take as its input
-    """
-    assert num_class is not None
-    if name in _MODELS:
-        model_path = _download(_MODELS[name])
-    elif os.path.isfile(name):
-        model_path = name
-    else:
-        raise RuntimeError(f"Model {name} not found; available models = {available_models()}")
-
-    try:
-        # loading JIT archive
-        model = torch.jit.load(model_path, map_location=device if jit else "cpu").eval()
-        state_dict = None
-    except RuntimeError:
-        # loading saved state dict
-        if jit:
-            warnings.warn(f"File {model_path} is not a JIT archive. Loading as a state dict instead")
-            jit = False
-        state_dict = torch.load(model_path, map_location="cpu")
-
-    if not jit:
-        try:
-            model = build_model(state_dict or model.state_dict(), weight_sharing, feature_fusion, num_class = num_class).to(device)
-        except KeyError:
-            sd = {k[7:]: v for k,v in state_dict["state_dict"].items()}
-            model = build_model(sd, weight_sharing, feature_fusion, num_class=num_class).to(device)
-
-        if str(device) == "cpu":
-            model.float()
-        return model, \
-               _transform(model.visual.input_resolution, is_train=True, affine=affine_transformation), \
-               _transform(model.visual.input_resolution, is_train=False)
-    #sanity check to make sure we are not loading up old version of networks directly
-    assert model.visual2 is not None
-    # patch the device names
-    device_holder = torch.jit.trace(lambda: torch.ones([]).to(torch.device(device)), example_inputs=[])
-    device_node = [n for n in device_holder.graph.findAllNodes("prim::Constant") if "Device" in repr(n)][-1]
-
-    def patch_device(module):
-        graphs = [module.graph] if hasattr(module, "graph") else []
-        if hasattr(module, "forward1"):
-            graphs.append(module.forward1.graph)
-
-        for graph in graphs:
-            for node in graph.findAllNodes("prim::Constant"):
-                if "value" in node.attributeNames() and str(node["value"]).startswith("cuda"):
-                    node.copyAttributes(device_node)
-                    
-    #load sketch branch
-    weight_sharing = model.weight_sharing
-    if weight_sharing:
-        model.visual2 = model.visual
-    else:
-        #copy weight from image branch
-        sd1 = model.visual.state_dict()
-        sd2 = model.visual2.state_dict()
-        for name, param in sd1.items():
-            assert name in sd2
-            sd2[name].copy_(param)
-
-    model.apply(patch_device)
-    patch_device(model.encode_image)
-    patch_device(model.encode_text)
-
-    # patch dtype to float32 on CPU
-    if str(device) == "cpu":
-        float_holder = torch.jit.trace(lambda: torch.ones([]).float(), example_inputs=[])
-        float_input = list(float_holder.graph.findNode("aten::to").inputs())[1]
-        float_node = float_input.node()
-
-        def patch_float(module):
-            graphs = [module.graph] if hasattr(module, "graph") else []
-            if hasattr(module, "forward1"):
-                graphs.append(module.forward1.graph)
-
-            for graph in graphs:
-                for node in graph.findAllNodes("aten::to"):
-                    inputs = list(node.inputs())
-                    for i in [1, 2]:  # dtype can be the second or third argument to aten::to()
-                        if inputs[i].node()["value"] == 5:
-                            inputs[i].node().copyAttributes(float_node)
-
-        model.apply(patch_float)
-        patch_float(model.encode_image)
-        patch_float(model.encode_text)
-
-        model.float()
-
-    return model, \
-           _transform(model.input_resolution.item(), is_train=True, affine=affine_transformation), \
-           _transform(model.input_resolution.item(), is_train=False)
-
 
 def tokenize(texts: Union[str, List[str]], context_length: int = 77) -> torch.LongTensor:
     """

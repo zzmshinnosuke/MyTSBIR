@@ -11,7 +11,7 @@ import torch
 from sklearn.neighbors import NearestNeighbors
 
 from code.dataset import get_loader
-from code.clip import convert_weights, CLIP
+from code.models import convert_weights, CLIP
 from code.config import get_parser
 
 def save_result(args, retrival_result):
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     test_dataloader = get_loader(args, 'test')
-    model_config_file = './code/training/model_configs/ViT-B-16.json'
+    model_config_file = './model_pt/ViT-B-16.json'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     with open(model_config_file, 'r') as f:
         model_info = json.load(f)
