@@ -234,12 +234,6 @@ class GPT2LMHeadModel(GPT2PreTrainedModel):
                                                inputs_embeds=inputs_embeds, use_cache=use_cache)
         # print("transformer_outputs:", transformer_outputs[0].shape)
         transformer = transformer_outputs[0]
-        # with torch.no_grad():
-        #     image_feature = clipmodel.encode_image(image)
-        #     sketch_feature = clipmodel.encode_sketch(sketch)
-        #     image_feature = image_feature / image_feature.norm(dim=-1, keepdim=True)
-        #     sketch_feature = sketch_feature / sketch_feature.norm(dim=-1, keepdim=True)
-        #     fused_feature = clipmodel.feature_fuse(image_feature, sketch_feature)
         if MAX_LENGTH:
             efficient = fused_feature.unsqueeze(1).repeat(1, MAX_LENGTH, 1)
         else:

@@ -14,9 +14,8 @@ from tensorboardX import SummaryWriter
 
 from transformers.models.gpt2.modeling_gpt2 import GPT2Config
 
-from code.clip import tokenize, convert_weights, CLIP, ClassModel
-from code.AsymmetricLoss import AsymmetricLossOptimized
-from code.gpt import GPT2LMHeadModel
+from code.models import convert_weights, CLIP, ClassModel, GPT2LMHeadModel
+from code.models.AsymmetricLoss import AsymmetricLossOptimized
 from code.dataset import get_loader
 from code.config import get_parser
 
@@ -105,7 +104,7 @@ if __name__ == '__main__':
         logger.add_text(k, str(args.__dict__[k]))
 
     # load clip model
-    model_config_file = './code/training/model_configs/ViT-B-16.json'
+    model_config_file = './model_pt/ViT-B-16.json'
     model_file = './model_pt/tsbir_model_final.pt'
     # model_file = './runs/Dec08_12-29-07_dp3090tsbir_sketchycocolf/latest_checkpoint.pth'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

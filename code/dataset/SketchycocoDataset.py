@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import Dataset
 from transformers import GPT2Tokenizer
 
-from code.clip import _transform, tokenize
+from code.models import _transform, tokenize
 
 MAX_LENGTH = 77
 input_resolution = 224
