@@ -13,13 +13,13 @@ from code.clip import _transform, tokenize
 MAX_LENGTH = 77
 input_resolution = 224
 
-class SketchycocoDataset(Dataset):
+class SketchycocoLFDataset(Dataset):
     def __init__(self, config, split = "train"):
         self.config = config
         self.split = split
         self.root_path = config.dataset_root_path
-        self.images_path = os.path.join(self.root_path, "Scene", "GT")
-        self.sketch_path = os.path.join(self.root_path, "Scene", "Sketch", "paper_version")
+        self.images_path = os.path.join(self.root_path)
+        self.sketch_path = os.path.join(self.root_path)
         self._transform = _transform(input_resolution, is_train=False)
         self.files = list()
         self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
@@ -27,15 +27,8 @@ class SketchycocoDataset(Dataset):
 
     def load_files_path(self):
         assert self.split in ['train', 'test', 'val'], 'unknown split {}'.format(self.split)
-
-        if self.split == "train":
-            self.splitname = 'trainInTrain'
-        elif self.split == "val":
-            self.splitname = 'val'
-        elif self.split == "test":
-            self.splitname = 'valInTrain'
-        
-        captionpath = os.path.join(self.root_path, self.splitname+'.json')
+ 
+        captionpath = os.path.join(self.root_path, self.split+'.json')
         with open(captionpath, "r") as f:
             try:
                 self.all_captions = json.load(f)
@@ -59,8 +52,8 @@ class SketchycocoDataset(Dataset):
         imageId, caption = self.files[index][0], self.files[index][1]
         caption = self.pre_caption(caption)
 
-        image_path = os.path.join(self.images_path, self.splitname, imageId + ".png")
-        sketch_path = os.path.join(self.sketch_path, self.splitname, imageId + ".png")
+        image_path = os.path.join(self.images_path, self.split, 'image', imageId + ".png")
+        sketch_path = os.path.join(self.sketch_path, self.split, 'sketch', imageId + ".png")
         image = Image.open(image_path)
         sketch = Image.open(sketch_path)
         image_tran = self._transform(image)

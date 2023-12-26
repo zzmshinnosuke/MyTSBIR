@@ -1,6 +1,7 @@
 from .SFSDDataset import SFSDDataset
 from .SketchycocoDataset import SketchycocoDataset
 from .FScocoDataset import FScocoDataset
+from .SketchycocoLFDataset import SketchycocoLFDataset
 from .BaseSFSDDataset import BaseSFSDDataset
 from .BaseFScocoDataset import BaseFScocoDataset
 from .BaseSketchycocoDataset import BaseSketchycocoDataset

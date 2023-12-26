@@ -236,7 +236,60 @@ class Base():
         with open(path, "w") as f:
             json.dump(content, f)
 
-if __name__ == '__main__':
+def DealSFSD():
+    base = Base('/home/zzm/datasets/coco2017/', 'train2017')
+    sketchycoco_path = "/home/zzm/datasets/SFSD-open"
+    categories = base.getAllCatNames()[0]
+
+    for split in ["train", "test"]:
+        res = {}
+        with open(os.path.join(sketchycoco_path, split+"_names.txt"), 'r') as f:
+            files=[line.strip() for line in f.readlines()]
+        # print(files)
+        for imageId in files:
+            file_name = imageId + '.jpg'
+            captions = base.load_captions(file_name)
+
+            image_id = base.getImgIdsFromNames([file_name])[0][0]
+            image_cats = base.getCurImageCatsByImgId(image_id)
+            img_categories = dict.fromkeys(categories, 0)
+            for img_cat in image_cats:
+                img_categories[img_cat] = 1
+            cats = list(img_categories.values())
+
+            res[imageId] = {"captions":captions, "cats": cats}
+        split_path = os.path.join(sketchycoco_path, split+'.json')
+        base.saveJson(split_path, res)
+
+def DealFScoco():
+    base = Base('/home/zzm/datasets/coco2017/', 'train2017')
+    sketchycoco_path = "/home/zzm/datasets/fscoco"
+    categories = base.getAllCatNames()[0]
+
+    for split in ["FScocoTest", "FScocoTrain"]:
+        res = {}
+        files = []
+        images_path = os.path.join(sketchycoco_path, split+'.txt')
+        with open(images_path, 'r') as f:
+            for line in f.readlines():
+                files.append(line.strip())
+        for file in files:
+            imageId = file.split("/")[1]
+            file_name = imageId + '.jpg'
+            captions = base.load_captions(file_name)
+
+            image_id = base.getImgIdsFromNames([imageId+'.png'])[0][0]
+            image_cats = base.getCurImageCatsByImgId(image_id)
+            img_categories = dict.fromkeys(categories, 0)
+            for img_cat in image_cats:
+                img_categories[img_cat] = 1
+            cats = list(img_categories.values())
+
+            res[file] = {"cats": cats, "captions": captions}
+        split_path = os.path.join(sketchycoco_path, split+'_cat'+'.json')
+        base.saveJson(split_path, res)
+
+def DealSketchycoco():
     base = Base('/home/zzm/datasets/coco2017/', 'train2017')
     sketchycoco_path = "/home/zzm/datasets/SketchyCOCO"
     categories = base.getAllCatNames()[0]
@@ -261,4 +314,32 @@ if __name__ == '__main__':
             res[imageId] = {"captions":captions, "cats": cats}
         split_path = os.path.join(sketchycoco_path, split+'.json')
         base.saveJson(split_path, res)
+
+def DealSketchycoco_lf():
+    base = Base('/home/zzm/datasets/coco2017/', 'train2017')
+    sketchycoco_path = "/home/zzm/datasets/SketchyCOCO-lf"
+    categories = base.getAllCatNames()[0]
+
+    for split in ["train", "test"]:
+        res = {}
+        files = glob.glob(os.path.join(sketchycoco_path, split, 'image', '*.png'))
+        for file in files:
+            file_name = os.path.basename(file)
+            imageId = file_name.split(".")[0]
+            captions = base.load_captions(file_name)
+
+            image_id = base.getImgIdsFromNames([file_name])[0][0]
+            image_cats = base.getCurImageCatsByImgId(image_id)
+            img_categories = dict.fromkeys(categories, 0)
+            for img_cat in image_cats:
+                img_categories[img_cat] = 1
+            cats = list(img_categories.values())
+
+            res[imageId] = {"captions":captions, "cats": cats}
+        split_path = os.path.join(sketchycoco_path, split+'.json')
+        base.saveJson(split_path, res)
+
+if __name__ == '__main__':
+    # DealSFSD()
+    DealSketchycoco_lf()
         

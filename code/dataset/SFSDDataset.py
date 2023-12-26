@@ -9,6 +9,7 @@ import numpy as np
 import glob
 import os
 import json
+import re
 
 import torch
 from torch.utils.data import Dataset
@@ -41,32 +42,31 @@ class SFSDDataset(Dataset):
     def load_files_path(self):
         assert self.split in ['train', 'test', 'traintest'], 'unknown split {}'.format(self.split)
 
-        if self.split == 'traintest':
-            self.files = glob.glob(os.path.join(self.root_path, 'sketch', '*.json'))
-        else: 
-            filename_txt = 'train_names.txt' if self.split == 'train' else 'test_names.txt'
-            filename_path = os.path.join(self.root_path, filename_txt)
-            assert os.path.exists(filename_path), 'not find {}'.format(filename_path)
-            with open(filename_path, 'r') as f:
-                self.files=[line.strip() for line in f.readlines()]
-        assert len(self.files)>0, 'no sketch json file find in {}'.format(self.root_path)
-
         captionpath = os.path.join(self.root_path, self.split+'.json')
         with open(captionpath, "r") as f:
             try:
                 self.all_captions = json.load(f)
             except json.decoder.JSONDecodeError:
                 print("don't have "+ captionpath)
+        if self.split == "train":
+            keys_image_id = self.all_captions.keys()
+            for ki in keys_image_id:
+                for caption in self.all_captions[ki]["captions"]:
+                    self.files.append((ki, caption))
+        elif self.split == "test": 
+            keys_image_id = self.all_captions.keys()
+            for ki in keys_image_id:
+                self.files.append((ki, self.all_captions[ki]["captions"][0]))
+        assert len(self.files)>0, 'no sketch json file find in {}'.format(self.root_path)
         
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, index):
-        sketch_id = self.files[index]
+        sketch_id, caption = self.files[index][0], self.files[index][1]
+        caption = self.pre_caption(caption)
         with open(os.path.join(self.sketch_path, sketch_id+'.json'), 'r') as fp:
             item = json.load(fp)
-
-        caption = self.all_captions[sketch_id]['captions'][0]
 
         image_path = os.path.join(self.images_path, sketch_id+'.jpg')
         image = Image.open(image_path)
@@ -107,5 +107,30 @@ class SFSDDataset(Dataset):
                 points=tuple(tuple(p) for p in stroke['points'])
                 draw.line(points, fill=(0,0,0)) 
         return np.array(src_img)
+    
+    def pre_caption(self, caption, max_words=30):
+        caption = re.sub(
+            r"([,.'!?\"()*#:;~])",
+            '',
+            caption.lower(),
+        ).replace('-', ' ').replace('/', ' ').replace('<person>', 'person')
+
+        caption = re.sub(
+            r"\s{2,}",
+            ' ',
+            caption,
+        )
+        caption = caption.rstrip('\n')
+        caption = caption.strip(' ')
+
+        # truncate caption
+        caption_words = caption.split(' ')
+        if len(caption_words) > max_words:
+            caption = ' '.join(caption_words[:max_words])
+
+        if not len(caption):
+            raise ValueError("pre_caption yields invalid text")
+
+        return caption
 
         

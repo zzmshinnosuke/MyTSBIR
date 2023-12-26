@@ -2,6 +2,7 @@ from PIL import Image
 import os
 import json
 import numpy as np
+import re
 
 import torch
 from torch.utils.data import Dataset
@@ -27,33 +28,31 @@ class FScocoDataset(Dataset):
     def load_files_path(self):
         assert self.split in ['train', 'val', 'valid', 'test', 'trainval'], 'unknown split {}'.format(self.split)
 
-        filename_txt = 'FScocoTrain.txt' if self.split == 'train' else 'FScocoTest.txt'
-        filename_path = os.path.join(self.root_path, filename_txt)
-        assert os.path.exists(filename_path), 'not find {}'.format(filename_txt)
-
-        self.files = []
-        with open(filename_path, 'r') as f:
-            for line in f.readlines():
-                self.files.append(line.strip())
-
-        assert len(self.files) > 0, 'no txt file find in {}'.format(self.root_path)
-
         catfile_name = 'FScocoTrain_cat.json' if self.split == 'train' else 'FScocoTest_cat.json'
         catpath = os.path.join(self.root_path, catfile_name)
         with open(catpath, "r") as f:
             try:
-                self.all_cats = json.load(f)
+                self.all_captions = json.load(f)
             except json.decoder.JSONDecodeError:
                 print("don't have "+ catpath)
+        if self.split == "train":
+            keys_image_id = self.all_captions.keys()
+            for ki in keys_image_id:
+                for caption in self.all_captions[ki]["captions"]:
+                    self.files.append((ki, caption, self.all_captions[ki]["cats"]))
+        elif self.split == "test": 
+            keys_image_id = self.all_captions.keys()
+            for ki in keys_image_id:
+                self.files.append((ki, self.all_captions[ki]["captions"][0], self.all_captions[ki]["cats"]))
+        assert len(self.files)>0, 'no sketch json file find in {}'.format(self.root_path)
+
         
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, index):
-        image_id = self.files[index]
-        caption_path = os.path.join(self.root_path, 'text', image_id + '.txt')
-        with open(caption_path, 'r', encoding='utf-8') as f:
-            caption = f.readline().strip()
+        image_id = self.files[index][0]
+        caption = self.pre_caption(self.files[index][1])
 
         image_path = os.path.join(self.images_path, image_id + ".jpg")
         sketch_path = os.path.join(self.sketch_path, image_id + ".jpg")
@@ -62,7 +61,7 @@ class FScocoDataset(Dataset):
         image_tran = self._transform(image)
         sketch_tran = self._transform(sketch)
         
-        cate =  torch.tensor(np.array(list(self.all_cats[image_id]["cats"]))) 
+        cate =  torch.tensor(np.array(list(self.files[index][2]))) 
         
         tokenized = self.tokenizer.encode("<|endoftext|> " + caption + " <|endoftext|>")[:MAX_LENGTH]
         masks = torch.zeros(MAX_LENGTH)
@@ -72,5 +71,29 @@ class FScocoDataset(Dataset):
 
         txt = tokenize([str(caption)])[0]
 
-        return image_tran, sketch_tran, txt, cate , tokens, masks
+        return image_id, image_tran, sketch_tran, txt, cate , tokens, masks
         
+    def pre_caption(self, caption, max_words=30):
+        caption = re.sub(
+            r"([,.'!?\"()*#:;~])",
+            '',
+            caption.lower(),
+        ).replace('-', ' ').replace('/', ' ').replace('<person>', 'person')
+
+        caption = re.sub(
+            r"\s{2,}",
+            ' ',
+            caption,
+        )
+        caption = caption.rstrip('\n')
+        caption = caption.strip(' ')
+
+        # truncate caption
+        caption_words = caption.split(' ')
+        if len(caption_words) > max_words:
+            caption = ' '.join(caption_words[:max_words])
+
+        if not len(caption):
+            raise ValueError("pre_caption yields invalid text")
+
+        return caption

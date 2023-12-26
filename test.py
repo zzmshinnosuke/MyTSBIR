@@ -46,9 +46,10 @@ def test(args, test_dataloader, clipmodel):
         save_result(args, retrival_result)
 
 '''
-python test.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --resume ./runs/Oct30_17-08-29_dp3090tsbir_SFSD_no_clipmodel/latest_checkpoint.pth
-python test.py --dataset FScocoDataset --dataset_root_path ~/datasets/fscoco --resume ./runs/Sep19_17-33-48_cu02tsbir_fscoco/latest_checkpoint.pth
-python test.py --dataset SketchycocoDataset --dataset_root_path ~/datasets/SketchyCOCO --resume ./runs/Sep19_20-02-14_cu02tsbir_sketchycoco/latest_checkpoint.pth
+python test.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --resume ./runs/Dec04_08-12-22_dp3090tsbir_SFSD_all_train_text/latest_checkpoint.pth
+python test.py --dataset FScocoDataset --dataset_root_path ~/datasets/fscoco --resume ./runs/Dec05_00-38-16_dp3090tsbir_fscoco_alltexts/latest_checkpoint.pth
+python test.py --dataset SketchycocoDataset --dataset_root_path ~/datasets/SketchyCOCO --resume ./runs/Dec05_15-23-17_dp3090tsbir_sketchycoco_textall/latest_checkpoint.pth
+python test.py --dataset SketchycocoLFDataset --dataset_root_path ~/datasets/SketchyCOCO-lf --resume ./runs/Dec08_12-29-07_dp3090tsbir_sketchycocolf/latest_checkpoint.pth
 '''
 if __name__ == '__main__':
     parser = get_parser(split='test')
