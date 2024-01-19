@@ -34,13 +34,13 @@ class ResidualAttentionBlock(nn.Module):
 
     def attention(self, x: torch.Tensor):
         self.attn_mask = self.attn_mask.to(dtype=x.dtype, device=x.device) if self.attn_mask is not None else None
-        return self.attn(x, x, x, need_weights=False, attn_mask=self.attn_mask)[0]
+        return self.attn(x, x, x, need_weights=True, attn_mask=self.attn_mask)
 
     def forward(self, x: torch.Tensor):
-        x = x + self.attention(self.ln_1(x))
+        x_, attention_score = self.attention(self.ln_1(x))
+        x = x + x_
         x = x + self.mlp(self.ln_2(x))
-        return x
-
+        return x, attention_score
 
 class Transformer(nn.Module):
     def __init__(self, width: int, layers: int, heads: int, attn_mask: torch.Tensor = None):
@@ -50,7 +50,11 @@ class Transformer(nn.Module):
         self.resblocks = nn.Sequential(*[ResidualAttentionBlock(width, heads, attn_mask) for _ in range(layers)])
 
     def forward(self, x: torch.Tensor):
-        return self.resblocks(x)
+        attention_score = []
+        for i in range(self.layers):
+            x, score = self.resblocks[i](x)
+            attention_score.append(score)
+        return x, attention_score
 
 class VisualTransformer(nn.Module):
     def __init__(self, input_resolution: int, patch_size: int, width: int, layers: int, heads: int, output_dim: int):
@@ -78,15 +82,23 @@ class VisualTransformer(nn.Module):
         x = self.ln_pre(x)
 
         x = x.permute(1, 0, 2)  # NLD -> LND
-        x = self.transformer(x)
+        x, att_score = self.transformer(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
 
-        x = self.ln_post(x[:, 0, :])
+        # x = self.ln_post(x[:, 0, :])
+
+        # if self.proj is not None:
+        #     y = x @ self.proj
+        x = self.ln_post(x)
+        # print(x.shape)
 
         if self.proj is not None:
-            y = x @ self.proj
+            x = x @ self.proj
+        # y = x[:, 0, :]
+            
+        # print('att_score',att_score[0].shape)
 
-        return y, x
+        return x, att_score
 
 class MGABase(nn.Module):
     def __init__(self,
@@ -195,15 +207,19 @@ class MGABase(nn.Module):
 
         x = x + self.positional_embedding.type(self.dtype)
         x = x.permute(1, 0, 2)  # NLD -> LND
-        x = self.transformer(x)
+        x, att_scores = self.transformer(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
         x = self.ln_final(x).type(self.dtype)
-        
+        # print(text.shape,text)
+        # print(x.shape)
         # x.shape = [batch_size, n_ctx, transformer.width]
         # take features from the eot embedding (eot_token is the highest number in each sequence)
-        y = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] @ self.text_projection
-
-        return y, x
+        # x = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] @ self.text_projection
+        # print(y.shape)
+        x = x @ self.text_projection
+        # print(text[0])
+        # y = x[torch.arange(x.shape[0]), text.argmax(dim=-1)]
+        return x, att_scores
 
     def forward(self, image, text, sketch):
        

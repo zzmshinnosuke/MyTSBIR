@@ -11,7 +11,7 @@ import torch
 from sklearn.neighbors import NearestNeighbors
 
 from code.dataset import get_loader
-from code.models import convert_weights, CLIP
+from code.models import MGA
 from code.config import get_parser
 
 def save_result(args, retrival_result):
@@ -28,9 +28,20 @@ def test(args, test_dataloader, clipmodel):
         for batch in tqdm(test_dataloader):
             sketch_id, image, sketch, txt, _, _, _, = batch
             image, sketch, txt = image.cuda(), sketch.cuda(), txt.cuda()
-            image_feature, fused_feature = clipmodel(image, txt, sketch)
-            img_feats.extend(image_feature.cpu().detach().numpy())
-            fused_feats.extend(fused_feature.cpu().detach().numpy())
+            # image_feature, fused_feature = clipmodel(image, txt, sketch)
+            image_feat, _ = clipmodel.encode_image(image)
+            sketch_feat, _ = clipmodel.encode_sketch(sketch)
+            text_feat, _ = clipmodel.encode_text(txt)
+            sketch_feat = sketch_feat[:, 0, :]
+            image_feat = image_feat[:, 0, :]
+            text_feat = text_feat[:, 0, :]
+            image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
+            text_feat = text_feat / text_feat.norm(dim=-1, keepdim=True)
+            sketch_feat = sketch_feat / sketch_feat.norm(dim=-1, keepdim=True)
+            fused_feat = clipmodel.feature_fuse(text_feat, sketch_feat)
+
+            img_feats.extend(image_feat.cpu().detach().numpy())
+            fused_feats.extend(fused_feat.cpu().detach().numpy())
             sketch_ids.extend(list(sketch_id))
 
         sketch_ids = np.array(sketch_ids)
@@ -46,7 +57,7 @@ def test(args, test_dataloader, clipmodel):
         save_result(args, retrival_result)
 
 '''
-python test.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --resume ./runs/Dec04_08-12-22_dp3090tsbir_SFSD_all_train_text/latest_checkpoint.pth
+python test.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --resume ./runs/Jan19_00-44-40_dp3090tsbir_SFSD_sketch_text/latest_checkpoint.pth
 python test.py --dataset FScocoDataset --dataset_root_path ~/datasets/fscoco --resume ./runs/Dec05_00-38-16_dp3090tsbir_fscoco_alltexts/latest_checkpoint.pth
 python test.py --dataset SketchycocoDataset --dataset_root_path ~/datasets/SketchyCOCO --resume ./runs/Dec05_15-23-17_dp3090tsbir_sketchycoco_textall/latest_checkpoint.pth
 python test.py --dataset SketchycocoLFDataset --dataset_root_path ~/datasets/SketchyCOCO-lf --resume ./runs/Dec08_12-29-07_dp3090tsbir_sketchycocolf/latest_checkpoint.pth
@@ -60,11 +71,11 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     with open(model_config_file, 'r') as f:
         model_info = json.load(f)
-    model = CLIP(**model_info)
+    model = MGA(**model_info)
 
     checkpoint = torch.load(args.resume)
+    # print(checkpoint['state_dict'].keys())
     model.load_state_dict(checkpoint['state_dict'], strict=False)
     model.eval()
     clipmodel = model.to(device)
-    convert_weights(clipmodel)
     test(args, test_dataloader, clipmodel)
