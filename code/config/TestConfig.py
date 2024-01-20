@@ -51,5 +51,10 @@ def get_parser_test(prog='tsbir'):
                         default=1,
                         help='recall top_k')
     
+    parser.add_argument('--output_dim',
+                        type=int,
+                        default=40,
+                        help='the max epoch number')
+    
     
     return parser

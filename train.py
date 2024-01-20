@@ -73,7 +73,7 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     with open(model_config_file, 'r') as f:
         model_info = json.load(f)
-    model = MGA(**model_info)
+    model = MGA(args, **model_info)
     checkpoints = torch.load(model_file, map_location='cpu')
     sd = checkpoints["state_dict"]
     if next(iter(sd.items()))[0].startswith('module'):

@@ -40,9 +40,10 @@ def weights_init_kaiming(m):
             nn.init.constant_(m.bias, 0.0)
 
 class MGA(MGABase):
-    def __init__(self, **model_info):
+    def __init__(self, args, **model_info):
         super(MGA, self).__init__(**model_info)
-        self.classmodel = ClassModel(512, 256, 40)
+        print(args)
+        self.classmodel = ClassModel(512, 256, args.output_dim)
         self.ASL_Loss = AsymmetricLossOptimized()
 
         config = GPT2Config(
@@ -104,7 +105,8 @@ class MGA(MGABase):
 
         image_feat_global = image_feats[:, 0, :]
         sketch_feat_global = sketch_feats[:, 0, :]
-        text_feat_global = text_feats[:, 0, :]
+        # text_feat_global = text_feats[:, 0, :]
+        text_feat_global = text_feats[torch.arange(text_feats.shape[0]), text.argmax(dim=-1)]
 
         image_feat_global = image_feat_global / image_feat_global.norm(dim=-1, keepdim=True)#self.bottleneck_image(image_feats[:, 0, :])
         sketch_feat_global = sketch_feat_global / sketch_feat_global.norm(dim=-1, keepdim=True)#self.bottleneck_sketch(sketch_feats[:, 0, :])

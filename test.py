@@ -15,7 +15,7 @@ from code.models import MGA
 from code.config import get_parser
 
 def save_result(args, retrival_result):
-    with open("/home/zzm/projects/MyTSBIR/runs/retrival_result.json", "w") as f:
+    with open("/data/zzm/projects/MyTSBIR/runs/retrival_result.json", "w") as f:
         json.dump(retrival_result, f)
 
 def test(args, test_dataloader, clipmodel):
@@ -34,7 +34,8 @@ def test(args, test_dataloader, clipmodel):
             text_feat, _ = clipmodel.encode_text(txt)
             sketch_feat = sketch_feat[:, 0, :]
             image_feat = image_feat[:, 0, :]
-            text_feat = text_feat[:, 0, :]
+            # text_feat = text_feat[:, 0, :]
+            text_feat = text_feat[torch.arange(text_feat.shape[0]), txt.argmax(dim=-1)]
             image_feat = image_feat / image_feat.norm(dim=-1, keepdim=True)
             text_feat = text_feat / text_feat.norm(dim=-1, keepdim=True)
             sketch_feat = sketch_feat / sketch_feat.norm(dim=-1, keepdim=True)
@@ -54,10 +55,10 @@ def test(args, test_dataloader, clipmodel):
                 recall += 1
             retrival_result[sketch_ids[index]] = list(sketch_ids[indice])
         print(round(recall / len(img_feats), 4))
-        save_result(args, retrival_result)
+        # save_result(args, retrival_result)
 
 '''
-python test.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --resume ./runs/Jan19_00-44-40_dp3090tsbir_SFSD_sketch_text/latest_checkpoint.pth
+python test.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --resume ./runs/Jan19_09-46-06_dp3090tsbir_SFSD_sketch_text/latest_checkpoint.pth
 python test.py --dataset FScocoDataset --dataset_root_path ~/datasets/fscoco --resume ./runs/Dec05_00-38-16_dp3090tsbir_fscoco_alltexts/latest_checkpoint.pth
 python test.py --dataset SketchycocoDataset --dataset_root_path ~/datasets/SketchyCOCO --resume ./runs/Dec05_15-23-17_dp3090tsbir_sketchycoco_textall/latest_checkpoint.pth
 python test.py --dataset SketchycocoLFDataset --dataset_root_path ~/datasets/SketchyCOCO-lf --resume ./runs/Dec08_12-29-07_dp3090tsbir_sketchycocolf/latest_checkpoint.pth
@@ -71,7 +72,7 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     with open(model_config_file, 'r') as f:
         model_info = json.load(f)
-    model = MGA(**model_info)
+    model = MGA(args, **model_info)
 
     checkpoint = torch.load(args.resume)
     # print(checkpoint['state_dict'].keys())
