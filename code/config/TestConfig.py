@@ -24,18 +24,15 @@ def get_parser_test(prog='tsbir'):
                         default=5,
                         help='the number of loader workers')
     
-    # logger
-    parser.add_argument('--logger_comment',
-                        type=str,
-                        default="tsbir_SFSD",
-                        help='logger name')
-    
-    parser.add_argument('--logger_path',
-                        type=str,
-                        default="./runs/",
-                        help='logger save path')
-    
     # model
+    parser.add_argument('--model',
+                        default="MultiGrainModel",
+                        help = 'the model type')
+    
+    parser.add_argument('--model_config',
+                        default="./model_pt/ViT-B-16.json",
+                        help = 'the model config file')
+
     parser.add_argument('--batch_size',
                         type=int,
                         default=32,
@@ -43,13 +40,17 @@ def get_parser_test(prog='tsbir'):
     
     parser.add_argument('--resume',
                         type=str,
-                        default="./runs/latest_checkpoint.pth",
+                        default="./runs/SFSD/version_0/checkpoints/best-SFSD.ckpt",
                         help='model postion')
     
     parser.add_argument('--Top_K',
                         type=int,
                         default=1,
                         help='recall top_k')
+    
+    parser.add_argument('--pre_model',
+                        default=False,
+                        help='the path of checkpoint. if not, it is false')
     
     parser.add_argument('--output_dim',
                         type=int,

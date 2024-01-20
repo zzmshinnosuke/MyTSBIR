@@ -6,10 +6,10 @@ import os
 def get_parser_train(prog='tsbir'):
     parser=argparse.ArgumentParser(prog)
     
-    parser.add_argument('--gpu',
-                        type=str,
-                        default='0',
-                        help='no of gpus')
+    parser.add_argument('--gpu_nums',
+                        type = int,
+                        default = 1,
+                        help = 'the number of gpus')
     # dataset
     parser.add_argument('--dataset',
                         required=True,
@@ -36,6 +36,14 @@ def get_parser_train(prog='tsbir'):
                         help='logger save path')
     
     # model
+    parser.add_argument('--model',
+                        default="MultiGrainModel",
+                        help = 'the model type')
+    
+    parser.add_argument('--model_config',
+                        default="./model_pt/ViT-B-16.json",
+                        help = 'the model config file')
+    
     parser.add_argument('--batch_size',
                         type=int,
                         default=32,
@@ -82,6 +90,15 @@ def get_parser_train(prog='tsbir'):
                         default=0.5,
                         help='lr_scheduler learning_rate_factor')
     
+     # resume：  
+    parser.add_argument('--resume',
+                        default=False,
+                        help='model postion')
+
+    parser.add_argument('--pre_model',
+                        default="./model_pt/tsbir_model_final.pt",
+                        help='the path of checkpoint. if not, it is false')
     
-    
+    parser.add_argument('--test_result_path',
+                        help='the path for test result')
     return parser
