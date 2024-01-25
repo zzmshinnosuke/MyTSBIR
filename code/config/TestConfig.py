@@ -40,7 +40,7 @@ def get_parser_test(prog='tsbir'):
     
     parser.add_argument('--resume',
                         type=str,
-                        default="./runs/SFSD/version_0/checkpoints/best-SFSD.ckpt",
+                        default="./runs/SFSD/version_1/checkpoints/best-SFSD.ckpt",
                         help='model postion')
     
     parser.add_argument('--Top_K',
@@ -56,6 +56,11 @@ def get_parser_test(prog='tsbir'):
                         type=int,
                         default=40,
                         help='the max epoch number')
+    
+    parser.add_argument('--input_type',
+                        default='TS',
+                        choices=['T','S','TS'],
+                        help='input Text or Sketch or Text+Sketch')
     
     
     return parser

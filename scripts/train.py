@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
 '''
 python scripts/train.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open --logger_comment SFSD
-python scripts/train.py --dataset FScocoDataset --dataset_root_path ~/datasets/fscoco --logger_comment FSCOCO
-python scripts/train.py --dataset SketchycocoDataset --dataset_root_path ~/datasets/SketchyCOCO --logger_comment SketchyCOCO
-python scripts/train.py --dataset SketchycocoLFDataset --dataset_root_path ~/datasets/SketchyCOCO-lf --logger_comment SketchyCOCOlf
+python scripts/train.py --dataset FScocoDataset --dataset_root_path ~/datasets/fscoco --logger_comment FSCOCO --output_dim 80
+python scripts/train.py --dataset SketchycocoDataset --dataset_root_path ~/datasets/SketchyCOCO --logger_comment SketchyCOCO --output_dim 80
+python scripts/train.py --dataset SketchycocoLFDataset --dataset_root_path ~/datasets/SketchyCOCO-lf --logger_comment SketchyCOCOlf --output_dim 80 --resume ./runs/SketchyCOCO/version_0/checkpoints/best-SketchyCOCO.ckpt --pre_model False
 '''

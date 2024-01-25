@@ -51,7 +51,7 @@ def get_parser_train(prog='tsbir'):
     
     parser.add_argument('--n_epoch',
                         type=int,
-                        default=100,
+                        default=50,
                         help='the max epoch number')
     
     parser.add_argument('--input_dim',
@@ -68,6 +68,11 @@ def get_parser_train(prog='tsbir'):
                         type=int,
                         default=40,
                         help='the max epoch number')
+    
+    parser.add_argument('--input_type',
+                        default='TS',
+                        choices=['T','S','TS'],
+                        help='input Text or Sketch or Text+Sketch')
     
     #lr_scheduler:
     parser.add_argument('--learning_rate',
@@ -96,6 +101,7 @@ def get_parser_train(prog='tsbir'):
                         help='model postion')
 
     parser.add_argument('--pre_model',
+                        # default=False,
                         default="./model_pt/tsbir_model_final.pt",
                         help='the path of checkpoint. if not, it is false')
     

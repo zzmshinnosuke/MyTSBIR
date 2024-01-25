@@ -65,7 +65,12 @@ class MultiGrainModel(pl.LightningModule):
 
     def forward(self, image, text, sketch, cates, tokens, masks):
         image_feat, text_feat, sketch_feat = self.model(image, text, sketch, cates, tokens, masks)
-        fused_feat = self.model.feature_fuse(text_feat, sketch_feat)
+        if self.config.input_type == "T":
+            fused_feat = text_feat
+        elif self.config.input_type == "S":
+            fused_feat = sketch_feat
+        else:
+            fused_feat = self.model.feature_fuse(text_feat, sketch_feat)
         loss_contra = self.get_contrastive_loss(image_feat, fused_feat)
         # loss_h = self.get_hard_loss(image_feat,fused_feat, image_embeds, text_embeds, sketch_embeds)
         loss_class = self.get_class_loss(image_feat, text_feat, sketch_feat, cates)
@@ -86,6 +91,7 @@ class MultiGrainModel(pl.LightningModule):
         sketch_id, image, text, sketch, cates, tokens, masks = self.fetch_batch(train_batch)
         _, _, loss_contra, loss_class, loss_gpt = self.forward(image, text, sketch, cates, tokens, masks)
         loss = (10 * loss_class + loss_gpt + 100 * loss_contra) / 111
+        # loss = loss_contra
         self.log('train/loss_contra', loss_contra, on_step=True, on_epoch=True,batch_size=self.config.batch_size)
         self.log('train/loss_class', loss_class, on_step=True, on_epoch=True,batch_size=self.config.batch_size)
         self.log('train/loss_gpt', loss_gpt, on_step=True, on_epoch=True,batch_size=self.config.batch_size)
@@ -109,7 +115,6 @@ class MultiGrainModel(pl.LightningModule):
 
     def test_epoch_end(self, outs):
         Len = len(outs)
-        print(Len)
         image_feature_all = torch.cat([outs[i][0] for i in range(Len)]) # shape: B x dim x 7 x 7
         fused_feature_all = torch.cat([outs[i][1] for i in range(Len)]) # shape: B x dim x 7 x 7
           
@@ -118,6 +123,7 @@ class MultiGrainModel(pl.LightningModule):
         
         img_feats = np.stack(image_feature_all)
         fused_feats = np.stack(fused_feature_all)
+
         nbrs = NearestNeighbors(n_neighbors=10, algorithm='brute', metric='cosine').fit(img_feats)
         distances, indices = nbrs.kneighbors(fused_feats)
         recall1, recall5, recall10 = 0,0,0

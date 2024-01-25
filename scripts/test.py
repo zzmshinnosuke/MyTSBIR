@@ -22,5 +22,9 @@ if __name__ == '__main__':
     trainner.test(model, dataloader)
 
 #python scripts/test.py --dataset SFSDDataset --dataset_root_path ~/datasets/SFSD-open
+#python scripts/test.py --dataset FScocoDataset --dataset_root_path ~/datasets/fscoco --output_dim 80 --resume ./runs/FSCOCO/version_0/checkpoints/best-FSCOCO.ckpt
+# python scripts/test.py --dataset SketchycocoDataset --dataset_root_path ~/datasets/SketchyCOCO --output_dim 80 --resume ./runs/SketchyCOCO/version_0/checkpoints/best-SketchyCOCO.ckpt
+# python scripts/test.py --dataset SketchycocoLFDataset --dataset_root_path ~/datasets/SketchyCOCO-lf --output_dim 80 --resume ./runs/SketchyCOCOlf/version_0/checkpoints/best-SketchyCOCOlf.ckpt
+
 
 
