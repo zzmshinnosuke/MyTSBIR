@@ -62,5 +62,8 @@ def get_parser_test(prog='tsbir'):
                         choices=['T','S','TS'],
                         help='input Text or Sketch or Text+Sketch')
     
+    parser.add_argument('--result_path',
+                        default=False,
+                        help='save path of retrieval result')
     
     return parser

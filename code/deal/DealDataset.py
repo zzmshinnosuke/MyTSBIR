@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Created on 2021-07-18 16:16:11
 # @Author: zzm
-
+# 数据集预处理，顺便从coco中读取caption等信息。
 from pycocotools.coco import COCO
 import numpy as np
 import cv2

@@ -10,7 +10,7 @@ import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 import pytorch_lightning as pl
 import numpy as np
-import json
+import json, os
 from sklearn.neighbors import NearestNeighbors
 
 class ClassModel(nn.Module):
@@ -117,13 +117,19 @@ class MultiGrainModel(pl.LightningModule):
         Len = len(outs)
         image_feature_all = torch.cat([outs[i][0] for i in range(Len)]) # shape: B x dim x 7 x 7
         fused_feature_all = torch.cat([outs[i][1] for i in range(Len)]) # shape: B x dim x 7 x 7
-          
+        sketch_id_all = [outs[i][2] for i in range(Len)]
+        sketch_ids = []
+        for sketch_id in sketch_id_all:
+          sketch_ids.extend(list(sketch_id))
+
         image_feature_all = image_feature_all.cpu().detach().numpy()
         fused_feature_all = fused_feature_all.cpu().detach().numpy()
         
         img_feats = np.stack(image_feature_all)
         fused_feats = np.stack(fused_feature_all)
+        sketch_ids = np.array(sketch_ids)
 
+        retrival_result = {}
         nbrs = NearestNeighbors(n_neighbors=10, algorithm='brute', metric='cosine').fit(img_feats)
         distances, indices = nbrs.kneighbors(fused_feats)
         recall1, recall5, recall10 = 0,0,0
@@ -134,9 +140,12 @@ class MultiGrainModel(pl.LightningModule):
                 recall5 += 1
             if index in indice[:1]:
                 recall1 += 1
+            retrival_result[sketch_ids[index]] = list(sketch_ids[indice])
         print("top1",round(recall1 / len(img_feats), 4))
         print("top5",round(recall5 / len(img_feats), 4))
         print("top10",round(recall10 / len(img_feats), 4))
+        if self.config.result_path:
+            self.save_result(retrival_result)
         
     def training_epoch_end(self, outs):
         self.log('learning-rate', self.optimizers().param_groups[0]['lr'], batch_size=self.config.batch_size)
@@ -191,3 +200,9 @@ class MultiGrainModel(pl.LightningModule):
     def get_gpt_loss(self, tokens, fused_feats, masks):
         Ld_loss, outputs, _ = self.gptmodel(tokens, fused_feats, labels=tokens, attention_mask=masks)
         return Ld_loss
+    
+    def save_result(self, retrival_result):
+        path = os.path.join(self.config.result_path, self.config.dataset)
+        os.makedirs(path, exist_ok=True)
+        with open(os.path.join(path, "retrieval.json"), "w") as f:
+            json.dump(retrival_result, f)

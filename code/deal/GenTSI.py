@@ -1,5 +1,5 @@
 import os
-from code.dataset import get_dataset
+from code.datasets import get_dataset
 from easydict import EasyDict as edict
 from tqdm import tqdm
 

@@ -1,8 +1,9 @@
 .vscode/
 runs/
 model_pt/
-result/
+results/
 gpt2/
+html/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
