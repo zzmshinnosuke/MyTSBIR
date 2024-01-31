@@ -90,8 +90,8 @@ class MultiGrainModel(pl.LightningModule):
     def training_step(self, train_batch, batch_idx):
         sketch_id, image, text, sketch, cates, tokens, masks = self.fetch_batch(train_batch)
         _, _, loss_contra, loss_class, loss_gpt = self.forward(image, text, sketch, cates, tokens, masks)
-        loss = (10 * loss_class + loss_gpt + 100 * loss_contra) / 111
-        # loss = loss_contra
+        # loss = (10 * loss_class + loss_gpt + 100 * loss_contra) / 111
+        loss = loss_contra
         self.log('train/loss_contra', loss_contra, on_step=True, on_epoch=True,batch_size=self.config.batch_size)
         self.log('train/loss_class', loss_class, on_step=True, on_epoch=True,batch_size=self.config.batch_size)
         self.log('train/loss_gpt', loss_gpt, on_step=True, on_epoch=True,batch_size=self.config.batch_size)
@@ -101,7 +101,8 @@ class MultiGrainModel(pl.LightningModule):
     def validation_step(self, val_batch, batch_idx):
         sketch_id, image, text, sketch, cates, tokens, masks = self.fetch_batch(val_batch)
         image_feat, fused_feat, loss_contra, loss_class, loss_gpt = self.forward(image, text, sketch, cates, tokens, masks)
-        loss = (10 * loss_class + loss_gpt + 100 * loss_contra) / 111
+        # loss = (10 * loss_class + loss_gpt + 100 * loss_contra) / 111
+        loss = loss_contra
         self.log('val/loss_contra', loss_contra, on_epoch=True,batch_size=self.config.batch_size)
         self.log('val/loss_class', loss_class, on_epoch=True,batch_size=self.config.batch_size)
         self.log('val/loss_gpt', loss_gpt, on_epoch=True,batch_size=self.config.batch_size)

@@ -70,7 +70,9 @@ class SFSDDataset(Dataset):
 
         image_path = os.path.join(self.images_path, sketch_id+'.jpg')
         image = Image.open(image_path)
-        sketchImg = Image.fromarray(self.json2image(item))
+        # sketchImg = Image.fromarray(self.json2image(item))
+        sketch_path = os.path.join(self.sketchImg_path, sketch_id+'.png')
+        sketchImg = Image.open(sketch_path)
         image_tran = self._transform(image)
         sketch_tran = self._transform(sketchImg)
         
