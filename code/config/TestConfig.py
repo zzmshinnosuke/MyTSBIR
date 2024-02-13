@@ -43,11 +43,6 @@ def get_parser_test(prog='tsbir'):
                         default="./runs/SFSD/version_1/checkpoints/best-SFSD.ckpt",
                         help='model postion')
     
-    parser.add_argument('--Top_K',
-                        type=int,
-                        default=1,
-                        help='recall top_k')
-    
     parser.add_argument('--pre_model',
                         default=False,
                         help='the path of checkpoint. if not, it is false')

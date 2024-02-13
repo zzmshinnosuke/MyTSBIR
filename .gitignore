@@ -4,6 +4,8 @@ model_pt/
 results/
 gpt2/
 html/
+results-T/
+results-S/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

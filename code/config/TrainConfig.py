@@ -101,8 +101,8 @@ def get_parser_train(prog='tsbir'):
                         help='model postion')
 
     parser.add_argument('--pre_model',
-                        # default=False,
-                        default="./model_pt/tsbir_model_final.pt",
+                        default=False,
+                        # default="./model_pt/tsbir_model_final.pt",
                         help='the path of checkpoint. if not, it is false')
     
     parser.add_argument('--test_result_path',
